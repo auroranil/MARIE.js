@@ -166,7 +166,7 @@ button[disabled=disabled], button:disabled {
     max-height: 100%
 }
 
-#output-log-outer, #register-log-outer, #watch-list-outer {
+#output-log-outer, #register-log-outer, #watch-list-outer, #input-list-outer {
     background: #2e2e2e;
     color: white;
 }
@@ -254,4 +254,23 @@ button[disabled=disabled], button:disabled {
 
 #about {
   color: white;
+}
+.a{
+  color: #2192D8;
+}
+
+.sr-only {
+  color: white;
+}
+
+span.icon-bar {
+    background-color: white;
+}
+
+a {
+  color: #33b7b2;
+}
+
+select:disabled {
+  background-color: #969696;
 }

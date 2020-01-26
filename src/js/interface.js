@@ -51,6 +51,8 @@ window.addEventListener("load", function() {
         programCodeMirror.clearHistory();
         saveFile();
         localStorage.setItem("marie-program",null);
+        sessionStorage.setItem('savedFileID',null); //resets GAPI FileInfo upon New File
+        sessionStorage.setItem("parentID",null); //resets GAPI FileInfo upon New File
         $("#saved-status").text("New file");
         location.reload(); //reloads
     }
@@ -195,6 +197,29 @@ window.addEventListener("load", function() {
 
     getPrefs();
 
+    $("#overridebtn").click(function() {
+        restoreUrlHashCode();
+        $("#copyOverrideModal").modal("hide");
+    });
+    $("#canceloverridebtn").click(function() {
+        $("#copyOverrideModal").modal("hide");
+    });
+    function handleLoadingUrlCode() {
+        if (window.location.hash.startsWith("#code=")) {
+            if (localStorage.getItem("marie-program")) {
+                $("#copyOverrideModal").modal("show");
+            } else {
+                restoreUrlHashCode();
+            }
+        }
+    }
+    function restoreUrlHashCode() {
+        loadContents(decodeURI(window.location.hash.replace("#code=", "")));
+        $("#saved-status").text("Loaded linked code");
+        window.location.hash = ""; // keep clean
+    }
+
+    handleLoadingUrlCode();
     textArea.value = localStorage.getItem("marie-program") || "";
 
     if(textArea.value !== "") {
@@ -209,8 +234,6 @@ window.addEventListener("load", function() {
         lineNumbers: true,
         gutters: ["CodeMirror-linenumbers", "breakpoints"]
     });
-
-    console.log(theme);
 
     if(theme === "dark") {
         programCodeMirror.setOption('theme', 'dracula');
@@ -426,15 +449,20 @@ window.addEventListener("load", function() {
     function convertOutput(value) {
         switch(outputType) {
             case HEX:
-                return Utility.hex(value);
+                return document.createTextNode(Utility.hex(value));
             case DEC:
-                return value;
+                return document.createTextNode(value);
             case UNICODE:
-                return String.fromCharCode(value);
+                if (value===10) {
+                  return document.createElement("br");
+                } else {
+                  return document.createTextNode(String.fromCharCode(value));
+                }
+                break;
             case BIN:
-                return Utility.uintToBinGroup(value, 16, prefs.binaryStringGroupLength);
+                return document.createTextNode(Utility.uintToBinGroup(value, 16, prefs.binaryStringGroupLength));
             default:
-                return "Invalid output type.";
+                return document.createTextNode("Invalid output type.");
         }
     }
 
@@ -444,8 +472,10 @@ window.addEventListener("load", function() {
         }
 
         for(var i = 0; i < outputList.length; i++) {
-            outputLog.appendChild(document.createTextNode(convertOutput(outputList[i])));
-            outputLog.appendChild(document.createElement("br"));
+            outputLog.appendChild(convertOutput(outputList[i]));
+            if (outputType!==UNICODE) {
+              outputLog.appendChild(document.createElement("br"));
+            }
         }
     }
 
@@ -669,6 +699,10 @@ window.addEventListener("load", function() {
 
         $('#input-error').hide();
 
+        if (getInputFromInputList(output)) {
+            return;
+        }
+
         $('#input-dialog').popoverX('show');
 
         $('#input-dialog').off('hidden.bs.modal');
@@ -698,13 +732,67 @@ window.addEventListener("load", function() {
         });
     }
 
+    function getInputFromInputList(output) {
+        var inputList = $('#input-list').val().trim();
+
+        // get the first line
+        var value = inputList.split('\n')[0];
+
+        // if the first line is empty, return to user prompted input
+        if (value === "") {
+            return false;
+        }
+
+        // delete the used input line
+        $('#input-list').val(inputList.split('\n').slice(1).join('\n'));
+
+        // timeout because you get an error from the generator
+        // TypeError: Generator is already running
+        window.setTimeout(function() {
+            // get the type
+            var type = $('#input-list-select').val();
+            switch (type) {
+                case ("HEX"):
+                    value = parseInt(value, 16);
+                    break;
+                case ("DEC"):
+                    value = parseInt(value, 10);
+                    break;
+                case ("UNICODE"):
+                    value = value.charCodeAt(0);
+                    break;
+                case("BIN"):
+                    value = parseInt(value, 2);
+                    break;
+            }
+
+            // if it's a numeric value, use it as input
+            if (!isNaN(value)) {
+                output(value);
+                runLoop(microStepping);
+                stopWaiting();
+            }
+            // show error if not
+            else {
+                $('#input-error').show({
+                    step: function() {
+                        $('#input-dialog').popoverX("show");
+                    }
+                });
+            }
+        }, 0);
+        return true;
+    }
+
     function outputFunc(value) {
         var shouldScrollToBottomOutputLog = outputLog.getAttribute("data-stick-to-bottom") == "true";
 
         outputList.push(value);
 
-        outputLog.appendChild(document.createTextNode(convertOutput(value)));
-        outputLog.appendChild(document.createElement("br"));
+        outputLog.appendChild(convertOutput(value));
+        if (outputType!==UNICODE) {
+          outputLog.appendChild(document.createElement("br"));
+        }
 
         if(shouldScrollToBottomOutputLog) {
             outputLog.scrollTop = outputLog.scrollHeight;
@@ -805,10 +893,18 @@ window.addEventListener("load", function() {
             if (interval)
                 window.clearInterval(interval);
 
+            var realDelay = delay;
+            var itersPerLoop = 1;
+            if (realDelay < 10) {
+                realDelay = 10;
+                itersPerLoop = 10;
+            }
             // Don't pass in setInterval callback arguments into runLoop function.
             interval = window.setInterval(function() {
-                runLoop();
-            }, delay);
+                for (var i=0; i<itersPerLoop; i++) {
+                    runLoop();
+                }
+            }, realDelay);
 
             runButton.textContent = "Pause";
             runButton.disabled = false;
@@ -937,7 +1033,8 @@ window.addEventListener("load", function() {
             });
 
             sim.setEventListener("regwrite", function(e) {
-                document.getElementById(e.register).textContent = Utility.hex(e.newValue, e.register == "mar" || e.register == "pc" ? 3 : 4);
+                document.getElementById(e.register).textContent = Utility.hex(e.newValue, e.register == "mar" || e.register == "pc" ? 3 : 4);                
+                $("#"+e.register).attr("title","DEC "+e.newValue).tooltip('fixTitle');
 
                 if(!running || delay >= prefs.minDatapathDelay) {
                     datapath.setRegister(e.register, Utility.hex(e.newValue, e.register == "mar" || e.register == "pc" ? 3 : 4));
@@ -1284,6 +1381,28 @@ window.addEventListener("load", function() {
         return;
     };
 
+    $("#copylink").click(function() {
+        var copyCode = programCodeMirror.getValue();
+        if (!copyCode) {
+            return;
+        }
+        var copyUrl = (window.location.origin !== "null" // local origin
+            ? window.location.origin + window.location.pathname
+            : "https://marie.js.org/"
+        ) + "#code=" + encodeURI(copyCode);
+
+        // copying stuff
+        var el = document.createElement("textarea");
+        el.value = copyUrl;
+        el.setAttribute("readonly", "");
+        el.style = { display: "none" };
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand("copy");
+        document.body.removeChild(el);
+        $("#saved-status").text("File copied as link");
+    });
+
     uploadButton.addEventListener("click", function() {
         fileInput.click();
     });
@@ -1522,14 +1641,13 @@ window.addEventListener("load", function() {
         }
 
         $("#input-dialog").popoverX("refreshPosition");
-
-
     }
 
     handleDatapathUI();
 
     $(window).on('hashchange', function() {
         handleDatapathUI();
+        handleLoadingUrlCode();
     });
 
     $("body").removeClass("preload");
@@ -1542,17 +1660,71 @@ window.addEventListener("load", function() {
     });
 
 
+    $('#displayVersion').click(function(){
+        $('#currentVersion').modal('show');
+    });
 
+    $('#login').click(function(){
+        onApiLoad();
+    });
+
+
+    $('#gdrive').click(function(){
+      NProgress.start();
+      createPicker();
+    });
+
+    $('#o').click(function(){
+        var code = sessionStorage.getItem('gdrivefile');
+        NProgress.inc(0.1);
+        if(code !== ''){
+          programCodeMirror.setValue(code);
+          NProgress.inc(0.1);
+          console.info('Sucessfully loaded file from Google Drive');
+          sessionStorage.setItem('gdrivefile','');
+        } else {
+          console.error('Empty file loaded, aborting.');
+        }
+        NProgress.done();
+    });
+
+    $('#opensgdModal').click(function(){
+      NProgress.start();
+      var fileID = sessionStorage.getItem('savedFileID');
+      var folderID = sessionStorage.getItem("parentID");
+      var code = programCodeMirror.getValue();
+      sessionStorage.setItem('code',code);
+
+      NProgress.inc(0.1);
+      // case when saving for first time
+      if (fileID === "" || fileID === null || folderID === null || folderID === "" ){
+        $('#savetoGDriveModal').modal('show'); //Toggle Modal if file is not actually saved to GoogleDrive
+      } else {                                   //otherwise call a direct function
+        saveToGDrive(fileID,folderID,code);
+        console.log(programCodeMirror.getValue());
+      }
+    });
+
+
+
+    $('#saveToGDrive').click(function(){
+      $('#savetoGDriveModal').modal('hide'); //hide Modal if file is not actually saved to GoogleDrive
+      folderPicker();
+    });
 });
 
 $(document).ready(function(){
     if(localStorage.getItem("tosAgreed") === null || localStorage.getItem("tosAgreed") === 0){
         $('#tosModal').modal('show');
     }
-
     $('[data-toggle="tooltip"]').tooltip();
 
-    if(localStorage.getItem("tosAgreed") === null || localStorage.getItem("tosAgreed") === 0){
-        $('#tosModal').modal('show');
-    }
+    $('#nameLink').hide();
+    $('#gdrive').hide();
+    $('#logOut').hide();
+    $('#opensgdModal').hide();
+
+
+
+
 });
