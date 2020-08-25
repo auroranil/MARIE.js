@@ -18,7 +18,7 @@
     "mariejs",
     "marie",
     "assembly",
-    "learninggrunt ",
+    "learninggrunt",
     "javascript"
   ],
   "author": "Jason Nguyen, Saurabh Joshi, Eric Jiang and Erfan Norozi",
@@ -27,26 +27,26 @@
     "url": "https://github.com/MARIE-js/MARIE.js/issues"
   },
   "devDependencies": {
-    "gh-pages": "^2.0.1",
-    "grunt": "^1.0.3",
-    "grunt-contrib-clean": "~1.0.0",
+    "gh-pages": "^3.1.0",
+    "grunt": "^1.3.0",
+    "grunt-contrib-clean": "~2.0.0",
     "grunt-contrib-concat": "^1.0.1",
-    "grunt-contrib-connect": "~1.0.2",
+    "grunt-contrib-connect": "~3.0.0",
     "grunt-contrib-copy": "~1.0.0",
-    "grunt-contrib-jshint": "^1.0.0",
-    "grunt-contrib-uglify": "^1.0.1",
-    "grunt-ejs": "~0.3.0",
-    "grunt-html": "^7.0.0",
-    "grunt-jsdoc": "~2.1.0",
-    "grunt-open": "~0.2.3",
-    "grunt-regenerator": "^3.1.0",
-    "load-grunt-tasks": "^3.5.0"
+    "grunt-contrib-jshint": "^2.1.0",
+    "grunt-contrib-uglify": "^5.0.0",
+    "grunt-ejs": "~1.0.0",
+    "grunt-html": "^14.2.0",
+    "grunt-jsdoc": "~2.4.1",
+    "grunt-open": "~0.2.4",
+    "grunt-regenerator": "^5.0.0",
+    "load-grunt-tasks": "^5.1.0"
   },
   "dependencies": {
-    "electron": "^1.3.5",
-    "grunt-cli": "^1.2.0",
-    "grunt-contrib-connect": "~1.0.2",
-    "grunt-jsdoc": "~2.1.0",
-    "load-grunt-tasks": "^3.5.0"
+    "electron": "^10.0.0",
+    "grunt-cli": "^1.3.2",
+    "grunt-contrib-connect": "~3.0.0",
+    "grunt-jsdoc": "~2.4.0",
+    "load-grunt-tasks": "^5.1.0"
   }
 }

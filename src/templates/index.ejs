@@ -1,7 +1,7 @@
 <% title = "Home" %>
-<% include partials/header.ejs %>
+<%- include ('partials/header.ejs') %>
     <body class="preload">
-        <% include partials/nav %>
+        <%- include ('partials/nav') %>
         <main>
             <div class="container">
                 <div id="warn-missing-file" class="alert alert-warning" hidden>
