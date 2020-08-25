@@ -14,7 +14,7 @@ It is used within the unit [FIT1047 - Introduction to computer systems, networks
 ![Monash Uni logo](https://www.monash.edu/__data/assets/git_bridge/0006/509343/deploy/mysource_files/monash-logo-mono.svg)
 
 ## Setup
-Latest Stable: [https://github.com/MARIE-js/MARIE.js/releases/latest](https://github.com/MARIE-js/MARIE.js/releases/latest])
+Latest Stable: [https://github.com/MARIE-js/MARIE.js/releases/latest](https://github.com/MARIE-js/MARIE.js/releases/latest)
 
 Latest Release: [https://github.com/MARIE-js/MARIE.js/archive/master.zip](https://github.com/MARIE-js/MARIE.js/archive/master.zip)
 
