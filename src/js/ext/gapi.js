@@ -1,9 +1,9 @@
 (function() {
   // The Browser API key obtained from the Google Developers Console.
-  var developerKey = 'AIzaSyCpcTAAL4Yf9WoKVD_UE6f-_LwE6bDau-M';
+  var developerKey = 'AIzaSyAeqrBBcecgb8h8OcltPToa9VIAwipmtJ8';
 
   // The Client ID obtained from the Google Developers Console. Replace with your own Client ID.
-  var clientId = "357044840397-qs7nu7a17ohiih95v334l6k209qh5oah.apps.googleusercontent.com"
+  var clientId = "379498519945-t99d28b6shpjqu8mc8ie63sf8hl2rf87.apps.googleusercontent.com";
 
   // Scope(s) to use to access various data
   var scope = ['https://www.googleapis.com/auth/drive.readonly','https://www.googleapis.com/auth/userinfo.profile'];
